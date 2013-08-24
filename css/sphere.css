@@ -1,0 +1,95 @@
+body {
+	background-color: #333;
+	font-family: Lato;
+	color: #DDD;	
+}
+
+h1 {
+        font-size: 64px;
+}
+
+h1,h2,h3,h4 {
+	font-weight: 100;
+	position: relative;
+	margin: 30px auto;
+	text-align: center;
+}
+
+p {
+	line-height: 30px;
+}
+
+#header {
+	position: relative;
+	width: 100%;
+}
+
+#header-title, #header-subtitle {
+	width: 500px;
+}
+#header-subtitle {
+	font-style: italic;
+}
+
+
+#content {
+	padding: 0px;
+	width: 810px;
+	height: 900px;
+	margin: 0px auto;
+	position: relative;
+	top: -50px;
+}
+
+#canvas {
+	border: 2px solid black;
+	z-index: 2;
+}
+
+#controls {
+	width: 810;
+	height: 200px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 60px;
+	margin-bottom: -50px;
+	z-index:1;
+	position: relative;
+}
+
+#controls-title {
+	width: 75px;
+	margin-bottom: 15px;
+}
+
+#controls-body {
+	width: 100%;
+	position: relative;
+	margin: 0px;
+}
+
+#c-1 { /* Rotate */
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	margin: 0px;
+}
+
+#c-2 { /* Pan */
+	position: relative;
+	width: 200px; 
+	text-align: center;
+	margin: 0px auto;
+	right: 10px;
+}
+
+#c-3 { /* Zoom */
+	position: absolute;
+	right: 10px;
+	top: 0px;
+	margin: 0px;
+}
+
+#psst {
+	font-style: italic;
+}
