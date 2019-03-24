@@ -19,19 +19,6 @@ function fillCircle(ctx, x, y, r, color) {
 }
 
 /**
- * Outline a circle. Equivalent to `ctx.strokeRect()`, but for circles!
- * @param {CanvasRenderingContext2D} ctx
- * @param {Number} x        x coordinate of the center point of the circle
- * @param {Number} y        y coordinate of the center point of the circle
- * @param {Number} r        radius of the circle in pixels
- */
-function strokeCircle(ctx, x, y, r) {
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, 2 * Math.PI, false);
-    ctx.closePath();
-    ctx.stroke();
-}
-/**
  * Fill a circle with a radial gradient.
  * @param {CanvasRenderingContext2D} ctx
  * @param {Number} x        x coordinate of the center point of the circle
@@ -59,21 +46,7 @@ function fillCircleGradient(ctx, x, y, r, color1, color2) {
 
 
 /**
- * Class Dot
- * =========
- *
- * Members:
- * --------
- *
- * x, y, z:     The cartesian coordinates of the dot in the space of the sphere.
- * fg:          A flag indicating whether the dot is in the foreground.
- * fgcolor:     The color to use if fg == true.
- * bgcolor:     The color to use if fg == false.
- *
- *
- * About:
- * ------
- *
+ * @class Dot
  * The Dot class represents one point on the surface of sphere.
  * Each Dot is displayed as a smaller sphere attached to its point.
  *
@@ -88,6 +61,12 @@ function fillCircleGradient(ctx, x, y, r, color1, color2) {
  * is drawn with a very light color, with those furthest back being almost
  * invisible. This gives the illusion of depth.
  *
+ * @member {Number} x       The x coordinate of the dot
+ * @member {Number} y       The y coordinate of the dot
+ * @member {Number} z       The z coordinate of the dot
+ * @member {Boolean} fg     Flag indicating whether the dot is in the foreground
+ * @member {String} fgcolor The color to use if fg == true.
+ * @member {String} bgcolor The color to use if fg == false.
  */
 class Dot {
     constructor({x=0, y=0, z=0, fg=true, fgColor='#7EE37E', bgColor='#787878'}={}) {
@@ -107,33 +86,27 @@ class Dot {
 }
 
 /**
- * Class Sphere
- * =========
+ * @class Sphere
+ * The Sphere class represents the sphere object itself. It is basically
+ * comprised of a set of points on its surface and various numbers to keep track
+ * of how it should be drawn next.
  *
- * Members:
- * --------
+ * When drawn to the canvas, the dot list is dynamically sorted by Z-value and
+ * drawn back-to-front, so that the foremost dots are consistently drawn on top
+ * of those behind them. The further back a dot is (i.e. the lower its z-value)
+ * the lighter it is colored. This way, those in back blend into the background,
+ * becoming almost invisible.
  *
- * x, y, z:     Cartesian coordinates of the origin (center) point of the sphere.
- * r:           Radius of the sphere.
- * ctx:         Canvas context with which to draw.
- * drawSpheres: Flag indicating whether surface points (Dots) should be drawn as spheres or points.
- * circleSize:  Radius of the dots to be drawn.
- * points:      Array of surface points to keep track of.
- *
- *
- * About:
- * ------
- *
- * The Spehre class represents the sphere object itself. (Go figure.)
- * It is basically comprised of a set of points on its surface and various
- * numbers to keep track of how it should be drawn next.
- *
- * When drawn to the canvas, the dot list is dynamically sorted by Z-value
- * and drawn back-to-front, so that the foremost dots are consistently drawn
- * on top of those behind them. The further back a dot is (i.e. the lower its
- * z-value) the lighter it is colored. This way, those in back blend into the
- * background, becoming almost invisible.
- *
+ * @member {Number} x       The x coordinate of the center of the sphere
+ * @member {Number} y       The y coordinate of the center of the sphere
+ * @member {Number} z       The z coordinate of the center of the sphere
+ * @member {Number} r       Radius of the sphere.
+ * @member {Number} circleSize  Radius of the dots to be drawn.
+ * @member {Boolean} drawSpheres    Flag indicating whether surface Dots should
+ *                                  be drawn as spheres or points.
+ * @member {Array.<Array.<Dot>>} points     2D array of Dots on the surface of
+ *                                          the sphere
+ * @member {CanvasRenderingContext2D} ctx   Canvas context with which to draw
  */
 class Sphere {
     constructor({ctx, x=200, y=200, z=0, r=90, drawSpheres=false}={}) {
