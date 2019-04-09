@@ -65,33 +65,10 @@ function fillCircleGradient(ctx, x, y, r, color1, color2) {
  * @member {Number} y       The y coordinate of the dot
  * @member {Number} z       The z coordinate of the dot
  * @member {Boolean} fg     Flag indicating whether the dot is in the foreground
- * @member {String} fgcolor The color to use if fg == true.
- * @member {String} bgcolor The color to use if fg == false.
  */
 class Dot {
-    constructor({x=0, y=0, z=0, fg=true, fgColor='#7EE37E', bgColor='#787878'}={}) {
-        Object.assign(this, {x, y, z, fg, fgColor, bgColor});
-    }
-
-    /**
-     * Draw a circle or sphere at this dot's location using the given canvas rendering context
-     * @param {CanvasRenderingContext2D} ctx    The canvas rendering context to use for drawing
-     * @param {Boolean} drawSphere              Whether to draw the point as a circle or a little sphere
-     */
-    draw(ctx, drawSphere=false) {
-        // Store the context's fillStyle
-        var tmpStyle = ctx.fillStyle;
-        // Set the fillStyle for the dot
-        ctx.fillStyle = (this.fg ? this.fgColor : this.bgColor);
-        // Draw the dot
-        if (drawSphere) {
-            fillCircleGradient(ctx, this.x, this.y, this.circleSize, this.fg ? this.fgColor : '#fff', this.fg ? '#fff': this.bgColor)
-        }
-        else {
-            fillCircle(ctx, x, y, this.fg ? 10 : 5);
-        }
-        // Restore the previous fillStyle
-        ctx.fillStyle = tmpStyle;
+    constructor({x=0, y=0, z=0, fg=true}={}) {
+        Object.assign(this, {x, y, z, fg});
     }
 
     /**
@@ -115,8 +92,6 @@ class Dot {
         this.y += y
         this.z += z
     }
-
-
 }
 
 /**
@@ -169,7 +144,9 @@ class Sphere {
         }
     }
 
-    /** Draw to the canvas */
+    /**
+     * Draw to the canvas
+     */
     draw() {
         // Store the context's fillStyle
         const tmpStyle = this.ctx.fillStyle;
@@ -190,7 +167,7 @@ class Sphere {
         const z_sorted = this.points.slice();
 
         // Add the origin point of the sphere
-        z_sorted.push(new Dot({x: this.x, y: this.y, z: this.z, fgColor: '#27F'}));
+        z_sorted.push(new Dot({x: this.x, y: this.y, z: this.z}));
 
         // Sort the points by z value
         z_sorted.sort(function(a,b){return (b.z-a.z)});
@@ -221,10 +198,12 @@ class Sphere {
         this.ctx.fillStyle = tmpStyle;
     }
 
-    // Zoom in or out (ctrl drag)
-    zoom(x,y) {
+    /**
+     * Zoom in or out (ctrl drag)
+     */
+    zoom(x, y) {
         const length = Math.round(Math.sqrt(x*x + y*y));
-        const scaleFactor = (this.r + (x>0 ? length : -length)) / this.r;
+        const scaleFactor = (this.r + (x > 0 ? length : -length)) / this.r;
 
         // Scale the sphere
         this.x *= scaleFactor;
@@ -241,8 +220,10 @@ class Sphere {
         this.draw();
     }
 
-    // Pan (shift drag)
-    pan(x,y) {
+    /**
+     * Pan (shift drag)
+     */
+    pan(x, y) {
         // Translate the sphere's origin
         this.x += x;
         this.y += y;
@@ -256,8 +237,10 @@ class Sphere {
         this.draw();
     }
 
-    // Rotate the sphere (drag with no modifier keys)
-    rotate(x,y) {
+    /**
+     * Rotate the sphere (drag with no modifier keys)
+     */
+    rotate(x, y) {
         // Vertical rotation
         this.rotateXZ(((Math.PI/2)/this.r)*x);
         // Horizontal rotation
@@ -267,7 +250,9 @@ class Sphere {
         this.draw();
     }
 
-    // Rotate around the z-axis
+    /**
+     * Rotate around the z-axis
+     */
     rotateXY(ang) {
         for (const point of this.points) {
             const px = point.x - this.x;
@@ -281,7 +266,9 @@ class Sphere {
         }
     }
 
-    // Rotate around the y-axis
+    /**
+     * Rotate around the y-axis
+     */
     rotateXZ(ang) {
         for (const point of this.points) {
             const px = point.x - this.x;
@@ -295,7 +282,9 @@ class Sphere {
         }
     }
 
-    // Rotate around the x-axis
+    /**
+     * Rotate around the x-axis
+     */
     rotateYZ(ang) {
         for (const point of this.points) {
             const py = point.y - this.y;
@@ -309,8 +298,10 @@ class Sphere {
         }
     }
 
-    // Split pan!  (Hidden function, alt+shift drag)
-    hiddenFun1(x,y) {
+    /**
+     * Split pan!  (Hidden function, alt+shift drag)
+     */
+    hiddenFun1(x, y) {
         // Extend the radius of the sphere
         this.r += Math.round(Math.sqrt(x*x + y*y));
 
@@ -326,8 +317,10 @@ class Sphere {
         this.draw();
     }
 
-    // Cigar Zoom!  (Hidden function, alt+ctrl drag)
-    hiddenFun2(x,y) {
+    /**
+     * Cigar Zoom!  (Hidden function, alt+ctrl drag)
+     */
+    hiddenFun2(x, y) {
         const length = Math.round(Math.sqrt(x*x + y*y));
         const scaleFactor = (r + (x>0?length:-length))/r;
 
