@@ -322,7 +322,7 @@ class Sphere {
      */
     hiddenFun2(x, y) {
         const length = Math.round(Math.sqrt(x*x + y*y));
-        const scaleFactor = (r + (x>0?length:-length))/r;
+        const scaleFactor = (this.r + (x>0?length:-length))/this.r;
 
         // Scale the sphere
         this.r += length;
