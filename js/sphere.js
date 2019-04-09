@@ -9,7 +9,7 @@
  * @param {String} color    Fill color of the circle
  */
 function fillCircle(ctx, x, y, r, color) {
-    var oldFS = ctx.fillStyle;
+    const oldFS = ctx.fillStyle;
     ctx.fillStyle = color;
     ctx.beginPath();
     ctx.arc(x, y, r, 0, 2 * Math.PI, false);
@@ -28,12 +28,12 @@ function fillCircle(ctx, x, y, r, color) {
  * @param {String} color2   End color for the gradient
  */
 function fillCircleGradient(ctx, x, y, r, color1, color2) {
-    var oldFS = ctx.fillStyle;
+    const oldFS = ctx.fillStyle;
     ctx.beginPath();
     ctx.arc(x, y, r, 0, 2 * Math.PI, false);
     ctx.closePath();
     // create radial gradient
-    var grd = ctx.createRadialGradient(x-r/5, y-r/5, 0, x-r/5, y-r/5, r*0.8);
+    const grd = ctx.createRadialGradient(x-r/5, y-r/5, 0, x-r/5, y-r/5, r*0.8);
     // light blue
     grd.addColorStop(0, color1);
     // dark blue
@@ -73,16 +73,50 @@ class Dot {
         Object.assign(this, {x, y, z, fg, fgColor, bgColor});
     }
 
-    draw(ctx) {
+    /**
+     * Draw a circle or sphere at this dot's location using the given canvas rendering context
+     * @param {CanvasRenderingContext2D} ctx    The canvas rendering context to use for drawing
+     * @param {Boolean} drawSphere              Whether to draw the point as a circle or a little sphere
+     */
+    draw(ctx, drawSphere=false) {
         // Store the context's fillStyle
         var tmpStyle = ctx.fillStyle;
         // Set the fillStyle for the dot
         ctx.fillStyle = (this.fg ? this.fgColor : this.bgColor);
         // Draw the dot
-        fillCircle(ctx, x,y,this.fg?10:5);
+        if (drawSphere) {
+            fillCircleGradient(ctx, this.x, this.y, this.circleSize, this.fg ? this.fgColor : '#fff', this.fg ? '#fff': this.bgColor)
+        }
+        else {
+            fillCircle(ctx, x, y, this.fg ? 10 : 5);
+        }
         // Restore the previous fillStyle
         ctx.fillStyle = tmpStyle;
     }
+
+    /**
+     * Scale this dot's position by multiplying all corrdinates by the given scale factor
+     * @param {Number} scaleFactor
+     */
+    scale(scaleFactor) {
+        this.x *= scaleFactor
+        this.y *= scaleFactor
+        this.z *= scaleFactor
+    }
+
+    /**
+     * Move this dot to a new position indicated by the given x, y, and z distances
+     * @param {Number} [x=0]
+     * @param {Number} [y=0]
+     * @param {Number} [z=0]
+     */
+    translate({x=0, y=0, z=0}) {
+        this.x += x
+        this.y += y
+        this.z += z
+    }
+
+
 }
 
 /**
@@ -123,24 +157,22 @@ class Sphere {
         this.points = [];
         // Loop from 0 to 2*pi, creating one row of points at each step
         for (let angxy=0; angxy<2*Math.PI; angxy+=angstep){
-            const row = [];
             for (let angyz=0; angyz<2*Math.PI; angyz+=angstep) {
                 // Loop from 0 to 2*pi, creating one point at each step
-                row.push(new Dot({
+                this.points.push(new Dot({
                     x: r * Math.cos(angxy) * Math.sin(angyz) + x,
                     y: r * Math.sin(angxy) * Math.sin(angyz) + y,
                     z: r * Math.cos(angyz) + z,
                     fg: Math.cos(angyz) > 0
                 }));
             }
-            this.points.push(row);
         }
     }
 
     /** Draw to the canvas */
     draw() {
         // Store the context's fillStyle
-        var tmpStyle = this.ctx.fillStyle;
+        const tmpStyle = this.ctx.fillStyle;
 
 
         // Clear the canvas
@@ -154,38 +186,34 @@ class Sphere {
 
         // Sort the points by z-value
 
-        // Empty array
-        var z_sorted = new Array();
-        // Add each surface point first
-        for (var i=0; i<this.points.length; i++) {
-            for (var j=0; j<this.points[i].length; j++) {
-                z_sorted[this.points.length*i+j] = this.points[i][j];
-            }
-        }
+        // Clone the points array to avoid modifying it
+        const z_sorted = this.points.slice();
+
         // Add the origin point of the sphere
-        z_sorted[z_sorted.length] = new Dot(this.x, this.y, this.z);
+        z_sorted.push(new Dot({x: this.x, y: this.y, z: this.z, fgColor: '#27F'}));
+
+        // Sort the points by z value
         z_sorted.sort(function(a,b){return (b.z-a.z)});
 
 
-        for (var p=0; p<z_sorted.length; p++) {
-            var color;
+        for (const point of z_sorted) {
+            let color;
             // If drawing the origin point, draw it blue
-            if (z_sorted[p].x == this.x && z_sorted[p].y == this.y && z_sorted[p].z == this.z) {
+            if (point.x == this.x && point.y == this.y && point.z == this.z) {
                 color = "#27F";
             }
             // Else, draw the point a shade of gray relative to the z-value,
             // with darker pixels in the front and lighter pixels farther back
             else {
-                var n = Math.round(((z_sorted[p].z + this.r)/(this.r*2)) * 250);
-
+                const n = Math.round(((point.z + this.r)/(this.r*2)) * 250);
                 color = "rgb(" + n + "," + n + "," + n + ")";
             }
 
             if (this.drawSpheres) {
-                fillCircleGradient(this.ctx, z_sorted[p].x, z_sorted[p].y, this.circleSize, "#FFFFFF", color);
+                fillCircleGradient(this.ctx, point.x, point.y, this.circleSize, "#FFFFFF", color);
             }
             else {
-                fillCircle(this.ctx, z_sorted[p].x, z_sorted[p].y, this.circleSize, color);
+                fillCircle(this.ctx, point.x, point.y, this.circleSize, color);
             }
         }
 
@@ -195,78 +223,35 @@ class Sphere {
 
     // Zoom in or out (ctrl drag)
     zoom(x,y) {
-        var length = Math.round(Math.sqrt(x*x + y*y)),
-            scale = (this.r + (x>0 ? length : -length)) / this.r;
+        const length = Math.round(Math.sqrt(x*x + y*y));
+        const scaleFactor = (this.r + (x>0 ? length : -length)) / this.r;
 
-
-        this.x *= scale;
-        this.y *= scale;
-        this.z *= scale;
-
-        this.r *= scale;
-        this.circleSize *= scale;
+        // Scale the sphere
+        this.x *= scaleFactor;
+        this.y *= scaleFactor;
+        this.z *= scaleFactor;
+        this.r *= scaleFactor;
+        this.circleSize *= scaleFactor;
 
         // Scale each point
-        for (var i in this.points) {
-            for (var j in this.points[i]) {
-                this.points[i][j].x *= scale;
-                this.points[i][j].y *= scale;
-                this.points[i][j].z *= scale;
-            }
+        for (const point of this.points) {
+            point.scale(scaleFactor);
         }
         // Redraw in new positions
         this.draw();
     }
 
-    // Split pan!  (Hidden function, alt+shift drag)
-    hiddenFun1(x,y) {
-        this.r += Math.round(Math.sqrt(x*x + y*y));
-        // Scale each point
-        for (var i in this.points) {
-            for (var j in this.points[i]) {
-                this.points[i][j].x += (this.points[i][j].x > this.x ? x : -x);
-                this.points[i][j].y += (this.points[i][j].y > this.y ? y : -y);
-            }
-        }
-        // Redraw in new positions
-        this.draw();
-    }
-
-    // Cigar Zoom!  (Hidden function, alt+ctrl drag)
-    hiddenFun2(x,y) {
-        var length = Math.round(Math.sqrt(x*x + y*y)),
-            scale = (r + (x>0?length:-length))/r;
-
-        this.r += length;
-
-        this.x *= scale;
-        this.y *= scale;
-        //this.z *= scale;
-
-
-        // Scale each point
-        for (var i in this.points) {
-            for (var j in this.points[i]) {
-                this.points[i][j].x *= scale;
-                this.points[i][j].y *= scale;
-            }
-        }
-        // Redraw in new positions
-        this.draw();
-    }
-
-
-    // Pan  (shift drag)
+    // Pan (shift drag)
     pan(x,y) {
-        // Move each point
-        for (var i in this.points) {
-            for (var j in this.points[i]) {
-                this.points[i][j].x += x;
-                this.points[i][j].y += y;
-            }
-        }
+        // Translate the sphere's origin
         this.x += x;
         this.y += y;
+
+        // Translate each point
+        for (const point of this.points) {
+            point.translate({x, y})
+        }
+
         // Redraw in new positions
         this.draw();
     }
@@ -284,57 +269,82 @@ class Sphere {
 
     // Rotate around the z-axis
     rotateXY(ang) {
-        //console.log("XY test: ",ang);
-        for (var i in this.points) {
-            for (var j in this.points[i]) {
-                var px = this.points[i][j].x - this.x,
-                    py = this.points[i][j].y - this.y;
+        for (const point of this.points) {
+            const px = point.x - this.x;
+            const py = point.y - this.y;
 
-                var newx = px*Math.cos(ang)-py*Math.sin(ang),
-                    newy = px*Math.sin(ang)+py*Math.cos(ang);
+            const newx = px*Math.cos(ang)-py*Math.sin(ang);
+            const newy = px*Math.sin(ang)+py*Math.cos(ang);
 
-                this.points[i][j].x = newx+this.x;
-                this.points[i][j].y = newy+this.y;
-            }
+            point.x = newx+this.x;
+            point.y = newy+this.y;
         }
-    };
+    }
 
     // Rotate around the y-axis
     rotateXZ(ang) {
-        //console.log("XZ test: ",ang);
-        for (var i in this.points) {
-            for (var j in this.points[i]) {
-                var px = this.points[i][j].x - this.x,
-                    pz = this.points[i][j].z - this.z;
+        for (const point of this.points) {
+            const px = point.x - this.x;
+            const pz = point.z - this.z;
 
-                var newx = px*Math.cos(ang)-pz*Math.sin(ang),
-                    newz = px*Math.sin(ang)+pz*Math.cos(ang);
+            const newx = px*Math.cos(ang)-pz*Math.sin(ang);
+            const newz = px*Math.sin(ang)+pz*Math.cos(ang);
 
-                this.points[i][j].x = newx+this.x;
-                this.points[i][j].z = newz+this.z;
-            }
+            point.x = newx+this.x;
+            point.z = newz+this.z;
         }
-    };
+    }
 
     // Rotate around the x-axis
     rotateYZ(ang) {
-        //console.log("YZ test: ",ang);
+        for (const point of this.points) {
+            const py = point.y - this.y;
+            const pz = point.z - this.z;
 
-        for (var i in this.points) {
-            for (var j in this.points[i]) {
-                //console.log("old y: ", this.points[i][j].y,"\nold z: ", this.points[i][j].z);
-                var py = this.points[i][j].y - this.y,
-                    pz = this.points[i][j].z - this.z;
+            const newy = py*Math.cos(ang)-pz*Math.sin(ang);
+            const newz = py*Math.sin(ang)+pz*Math.cos(ang);
 
-                var newy = py*Math.cos(ang)-pz*Math.sin(ang),
-                    newz = py*Math.sin(ang)+pz*Math.cos(ang);
-
-                this.points[i][j].y = newy+this.y;
-                this.points[i][j].z = newz+this.z;
-                //console.log("new y: ", this.points[i][j].y,"\nnew z: ", this.points[i][j].z);
-            }
+            point.y = newy+this.y;
+            point.z = newz+this.z;
         }
-    };
+    }
+
+    // Split pan!  (Hidden function, alt+shift drag)
+    hiddenFun1(x,y) {
+        // Extend the radius of the sphere
+        this.r += Math.round(Math.sqrt(x*x + y*y));
+
+        // Translate each point
+        for (const point of this.points) {
+            point.translate({
+                x: point.x > this.x ? x : -x,
+                y: point.y > this.y ? y : -y
+            })
+        }
+
+        // Redraw in new positions
+        this.draw();
+    }
+
+    // Cigar Zoom!  (Hidden function, alt+ctrl drag)
+    hiddenFun2(x,y) {
+        const length = Math.round(Math.sqrt(x*x + y*y));
+        const scaleFactor = (r + (x>0?length:-length))/r;
+
+        // Scale the sphere
+        this.r += length;
+        this.x *= scaleFactor;
+        this.y *= scaleFactor;
+
+        // Scale each point
+        for (const point of this.points) {
+            point.scale(scaleFactor);
+        }
+
+        // Redraw in new positions
+        this.draw();
+    }
+
 }
 
 
