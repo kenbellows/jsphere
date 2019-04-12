@@ -61,6 +61,7 @@ ul#controls-listing > li:last-child {
 
 canvas {
     border: 2px solid black;
+    touch-action: none;
 }
 
 .psst {

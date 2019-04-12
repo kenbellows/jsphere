@@ -357,21 +357,33 @@ function main() {
     });
     sphere.draw();
 
+    // Prefer 'pointer' events when available
+    const pointerEvent = (
+      'onpointermove' in document.body
+        ? 'pointer'
+        : 'mouse'
+    );
+    // Shorthands for 'mouse' or 'pointer' events
+    const [downEvt, upEvt, moveEvt, outEvt] = (
+      ['down', 'up', 'move', 'out']
+        .map(evtType => pointerEvent + evtType)
+    );
+
     // Drag events
     let dragOrigin;
-    canvas.addEventListener('mousedown', dragStartHandler)
+    canvas.addEventListener(downEvt, dragStartHandler)
     function dragStartHandler(e){
         dragOrigin = {
             x: e.clientX,
             y: e.clientY
         };
-        document.addEventListener('mousemove', dragHandler);
+        document.addEventListener(moveEvt, dragHandler);
 
-        window.addEventListener('mouseup', dragStopHandler);
-        window.addEventListener('mouseout', dragStopHandler);
+        window.addEventListener(upEvt, dragStopHandler);
+        window.addEventListener(outEvt, dragStopHandler);
 
-        canvas.addEventListener('mouseout', stopPropagation);
-        document.body.addEventListener('mouseout', stopPropagation);
+        canvas.addEventListener(outEvt, stopPropagation);
+        document.body.addEventListener(outEvt, stopPropagation);
     }
 
     function dragHandler(e){
@@ -391,12 +403,12 @@ function main() {
     }
 
     function dragStopHandler(e) {
-        document.removeEventListener('mousemove', dragHandler);
-        document.removeEventListener('mouseup', dragStopHandler);
-        document.removeEventListener('mouseout', dragStopHandler);
+        document.removeEventListener(moveEvt, dragHandler);
+        document.removeEventListener(upEvt, dragStopHandler);
+        document.removeEventListener(outEvt, dragStopHandler);
 
-        canvas.removeEventListener('mouseout', stopPropagation);
-        document.body.removeEventListener('mouseout', stopPropagation);
+        canvas.removeEventListener(outEvt, stopPropagation);
+        document.body.removeEventListener(outEvt, stopPropagation);
     }
 
     function stopPropagation(e) {
